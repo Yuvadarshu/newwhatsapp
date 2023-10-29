@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WhatsApp Message Link</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput-jquery.min.js"></script>
+    <script src="https://cdn.rawgit.com/neocotic/qrious/master/dist/qrious.min.js"></script>
+    <style>
+        body {
+            text-align: center;
+            padding: 20px;
+        }
+        input[type="tel"],
+        input[type="text"],
+        input[type="file"] {
+            padding: 10px;
+            margin: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #25d366;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #128C7E;
+        }
+        #qrcode {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Send WhatsApp Message</h2>
+    <input type="text" id="phone" placeholder="Enter Phone Number">
+    <input type="text" id="message" placeholder="Enter Your Message">
+    <input type="file" id="media" accept="image/*,video/*">
+    
+    <!-- Country code dropdown with all countries -->
+    <select id="countryCode" class="intl-tel-input"></select>
+    
+    <button id="send">Send Message on WhatsApp</button>
+    <button id="clear">Clear Form</button>
+
+    <div id="feedback" style="color: red;"></div>
+    
+    <div id="qrcode"></div>
+
+    <script>
+        // Initialize the country code dropdown using intl-tel-input
+        const countryCodeDropdown = $("#countryCode").intlTelInput({
+            initialCountry: "auto",
+            separateDialCode: true,
+            dropdownContainer: document.body,
+        });
+
+        const feedback = document.getElementById("feedback");
+        const qrCode = new QRious({
+            element: document.getElementById("qrcode"),
+            size: 200,
+        });
+
+        document.getElementById("send").addEventListener("click", function() {
+            const selectedCountryData = countryCodeDropdown.intlTelInput("getSelectedCountryData");
+            const phone = document.getElementById("phone").value;
+            const message = document.getElementById("message").value;
+            const media = document.getElementById("media").files[0];
+
+            if (phone.trim() === '' || !/^\d{1,15}$/.test(phone)) {
+                feedback.innerText = 'Please enter a valid phone number.';
+                return;
+            }
+
+            if (message.trim() === '') {
+                feedback.innerText = 'Please enter a message.';
+                return;
+            }
+
+            // Create the WhatsApp message link
+            const countryCode = selectedCountryData.dialCode;
+            const whatsappURL = `https://api.whatsapp.com/send?phone=${countryCode}${phone}&text=${encodeURIComponent(message)}`;
+
+            // Generate QR code for the WhatsApp link
+            qrCode.value = whatsappURL;
+
+            // Open the link in a new tab
+            window.open(whatsappURL, "_blank");
+
+            // Clear input fields after sending
+            document.getElementById("phone").value = "";
+            document.getElementById("message").value = "";
+            document.getElementById("media").value = ""; // Clear file input
+            feedback.innerText = 'Message sent successfully!';
+        });
+
+        // Clear Form
+        document.getElementById("clear").addEventListener("click", function() {
+            document.getElementById("phone").value = "";
+            document.getElementById("message").value = "";
+            document.getElementById("media").value = ""; // Clear file input
+            feedback.innerText = '';
+            qrCode.clear();
+        });
+    </script>
+</body>
+</html>
